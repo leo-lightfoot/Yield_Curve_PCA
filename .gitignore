@@ -6,8 +6,9 @@ __pycache__/
 venv/
 env/
 
-# Generated outputs — reproducible from source, not version-controlled
-outputs/
+# Generated outputs — CSVs and pickle files excluded; PNGs committed for GitHub Pages
+outputs/*.csv
+outputs/*.pkl
 
 # Jupyter
 .ipynb_checkpoints/

@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yield Curve Scenario Engine &mdash; PCA Risk Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #f6f3ee;
+      --card:       #ffffff;
+      --border:     #ddd9d0;
+      --rule:       #e8e4de;
+      --ink:        #141414;
+      --body:       #3a3733;
+      --muted:      #7a7570;
+      --accent:     #1a3d6b;
+      --accent-lt:  #eef3f9;
+      --green:      #1a6b3a;
+      --green-lt:   #eef6f1;
+      --red:        #9b1c1c;
+      --red-lt:     #fdf0f0;
+      --gold:       #7c5e1e;
+      --gold-lt:    #fdf6e8;
+      --radius:     8px;
+      --serif:      "DM Serif Display", Georgia, serif;
+      --sans:       "DM Sans", system-ui, sans-serif;
+      --mono:       "DM Mono", "Courier New", monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--body);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(246, 243, 238, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 40px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--accent); }
+
+    /* ── Page container ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 160px 40px 100px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 80px;
+      align-items: start;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .hero-title {
+      font-family: var(--serif);
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      line-height: 1.15;
+      color: var(--ink);
+      margin-bottom: 24px;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 520px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .meta-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+    }
+
+    .meta-card .mc-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .meta-card .mc-value {
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    .meta-card .mc-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── Sections ── */
+    .section {
+      padding: 80px 0;
+      border-top: 1px solid var(--rule);
+    }
+
+    .section-header {
+      margin-bottom: 48px;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-family: var(--serif);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      color: var(--ink);
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+
+    .section-sub {
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 640px;
+      line-height: 1.75;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+    }
+
+    /* ── Chart embed ── */
+    .chart-embed {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .chart-embed img {
+      width: 100%;
+      display: block;
+    }
+
+    .chart-embed .chart-label {
+      padding: 14px 20px;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .chart-embed .chart-label strong {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+    }
+
+    .chart-embed .chart-label span {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── Two-col layout ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .two-col-wide {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    /* ── PCA factors ── */
+    .factor-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 26px;
+    }
+
+    .factor-num {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .factor-name {
+      font-family: var(--serif);
+      font-size: 1.3rem;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .factor-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .factor-bar-wrap {
+      background: var(--rule);
+      border-radius: 3px;
+      height: 5px;
+      margin-bottom: 10px;
+    }
+
+    .factor-bar {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .factor-pct {
+      font-family: var(--mono);
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .factor-pct-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .factor-plain {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--rule);
+      font-size: 0.83rem;
+      color: var(--body);
+      line-height: 1.65;
+    }
+
+    /* ── Scenario cards ── */
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .sc-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+    }
+
+    .sc-tag {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .sc-tag.loss { background: var(--red-lt); color: var(--red); }
+    .sc-tag.gain { background: var(--green-lt); color: var(--green); }
+    .sc-tag.mixed { background: var(--gold-lt); color: var(--gold); }
+
+    .sc-title {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .sc-pnl {
+      font-family: var(--mono);
+      font-size: 1.5rem;
+      font-weight: 500;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .sc-pnl.neg { color: var(--red); }
+    .sc-pnl.pos { color: var(--green); }
+
+    .sc-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── Portfolio table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    tbody td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--rule);
+      font-size: 0.88rem;
+      color: var(--body);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    td.num {
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+
+    tbody tr:last-child td.num { color: var(--ink); }
+
+    /* ── Pipeline steps ── */
+    .pipeline { display: flex; flex-direction: column; gap: 0; }
+
+    .pipe-step {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 20px;
+      padding-bottom: 32px;
+      position: relative;
+    }
+
+    .pipe-step:last-child { padding-bottom: 0; }
+
+    .pipe-step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 23px;
+      top: 48px;
+      bottom: 0;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .pipe-num {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--accent);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pipe-body { padding-top: 12px; }
+
+    .pipe-body strong {
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--ink);
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .pipe-body p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ── Callout box ── */
+    .callout {
+      background: var(--accent-lt);
+      border: 1px solid #c5d8f0;
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+
+    .callout p {
+      font-size: 0.9rem;
+      color: var(--ink);
+      line-height: 1.7;
+    }
+
+    .callout strong { color: var(--accent); }
+
+    /* ── Divider label ── */
+    .divider-label {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 40px 0 28px;
+    }
+
+    .divider-label span {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .divider-label::before,
+    .divider-label::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--rule);
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--rule);
+      padding: 32px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    footer p {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; padding: 120px 24px 60px; gap: 40px; }
+      .container { padding: 0 24px; }
+      .two-col, .two-col-wide, .three-col, .scenario-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .section { padding: 56px 0; }
+      footer { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-brand" href="#">Yield Curve &mdash; PCA Risk Engine</a>
+    <ul class="nav-links">
+      <li><a href="#data">Data</a></li>
+      <li><a href="#pca">PCA</a></li>
+      <li><a href="#portfolio">Portfolio</a></li>
+      <li><a href="#scenarios">Scenarios</a></li>
+      <li><a href="#methodology">Methodology</a></li>
+      <li><a href="https://github.com/abdulw352/Yield_Curve_PCA" target="_blank">GitHub &uarr;</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div>
+    <p class="hero-eyebrow">Fixed Income Risk Analytics &nbsp;&middot;&nbsp; PCA &nbsp;&middot;&nbsp; Scenario Analysis</p>
+    <h1 class="hero-title">
+      How much does a portfolio lose<br />
+      when <em>interest rates move?</em>
+    </h1>
+    <p class="hero-sub">
+      This project uses 20 years of US Treasury yield data to identify the three patterns that
+      drive almost all yield-curve movements &mdash; then stress-tests a fixed income portfolio
+      against each of them.
+    </p>
+  </div>
+
+  <div class="hero-meta">
+    <div class="meta-card">
+      <div class="mc-label">Dataset</div>
+      <div class="mc-value">9 Tenors &middot; 20 Yrs</div>
+      <div class="mc-sub">1M through 30Y &middot; Daily FRED data</div>
+    </div>
+    <div class="meta-card">
+      <div class="mc-label">Variance captured</div>
+      <div class="mc-value">89.8%</div>
+      <div class="mc-sub">Explained by just 3 principal components</div>
+    </div>
+    <div class="meta-card">
+      <div class="mc-label">Portfolio DV01</div>
+      <div class="mc-value">$3,053</div>
+      <div class="mc-sub">Dollar loss per 1 basis-point rate rise</div>
+    </div>
+    <div class="meta-card">
+      <div class="mc-label">Worst-case scenario</div>
+      <div class="mc-value">&minus;$28,978</div>
+      <div class="mc-sub">2-sigma parallel rate rise across all tenors</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Section 1: The Data ── -->
+<div class="section" id="data">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">01 &mdash; The Data</p>
+      <h2 class="section-title">Two decades of the US Treasury yield curve</h2>
+      <p class="section-sub">
+        We pull daily yields for nine maturities from the Federal Reserve's FRED database &mdash;
+        everything from one-month T-bills to the 30-year long bond. That gives us a complete
+        picture of how the curve has shifted through multiple cycles: the 2008 financial crisis,
+        COVID-era zero rates, and the 2022 hiking cycle that moved faster than almost any in history.
+      </p>
+    </div>
+
+    <div class="chart-embed" style="margin-bottom: 24px;">
+      <img src="outputs/yield_curve_history.png" alt="US Treasury Yield History" loading="lazy" />
+      <div class="chart-label">
+        <strong>Fig 1</strong>
+        <span>20+ years of 2Y, 5Y, 10Y and 30Y Treasury yields, with three key macro events marked.</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p>
+        The chart above shows the kind of volatility this analysis has to account for. Yields went
+        from near zero in 2021 to over 5% by 2023 &mdash; a move of hundreds of basis points in
+        under two years. A portfolio that wasn't stress-tested for that kind of shock would have
+        been caught off guard.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Section 2: PCA ── -->
+<div class="section" id="pca">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">02 &mdash; Finding the Patterns</p>
+      <h2 class="section-title">Three shapes explain almost everything</h2>
+      <p class="section-sub">
+        Rather than treating each of the nine yields as a separate risk, we asked: what are the
+        most common <em>shapes</em> of yield-curve movement? Principal Component Analysis answers
+        exactly that question by finding the directions in which the curve tends to move most.
+      </p>
+    </div>
+
+    <div class="three-col" style="margin-bottom: 32px;">
+
+      <div class="factor-block">
+        <div class="factor-num">PC1 &mdash; 58.2% of all moves</div>
+        <div class="factor-name">The Level Shift</div>
+        <div class="factor-desc">Parallel shift across all tenors</div>
+        <div class="factor-bar-wrap">
+          <div class="factor-bar" style="width: 58.2%; background: #1a3d6b;"></div>
+        </div>
+        <div class="factor-pct">58.2%<br /><span class="factor-pct-label">variance explained</span></div>
+        <div class="factor-plain">
+          All yields move up or down together. When the Fed raises or cuts rates, this is what
+          you see. It is the single biggest driver of bond portfolio gains and losses.
+        </div>
+      </div>
+
+      <div class="factor-block">
+        <div class="factor-num">PC2 &mdash; 22.6% of all moves</div>
+        <div class="factor-name">The Slope Shift</div>
+        <div class="factor-desc">Short end vs. long end</div>
+        <div class="factor-bar-wrap">
+          <div class="factor-bar" style="width: 22.6%; background: #1a6b3a;"></div>
+        </div>
+        <div class="factor-pct">22.6%<br /><span class="factor-pct-label">variance explained</span></div>
+        <div class="factor-plain">
+          Short rates and long rates move in opposite directions. A "steepening" curve (long rates
+          up, short rates down) often signals recession fears. A "flattening" suggests the Fed
+          is hiking aggressively.
+        </div>
+      </div>
+
+      <div class="factor-block">
+        <div class="factor-num">PC3 &mdash; 9.0% of all moves</div>
+        <div class="factor-name">The Curvature Shift</div>
+        <div class="factor-desc">Belly vs. wings</div>
+        <div class="factor-bar-wrap">
+          <div class="factor-bar" style="width: 9.0%; background: #7c5e1e;"></div>
+        </div>
+        <div class="factor-pct">9.0%<br /><span class="factor-pct-label">variance explained</span></div>
+        <div class="factor-plain">
+          The middle of the curve (the "belly") moves relative to the short and long ends.
+          This is the classic "butterfly" trade in fixed income, and it matters for instruments
+          like 5-year swaps positioned in that belly.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="two-col">
+      <div class="chart-embed">
+        <img src="outputs/pca_factor_loadings.png" alt="PCA Factor Loadings" loading="lazy" />
+        <div class="chart-label">
+          <strong>Fig 2</strong>
+          <span>How each PC loads across the nine tenors &mdash; the "shape" of each yield-curve move.</span>
+        </div>
+      </div>
+      <div class="chart-embed">
+        <img src="outputs/explained_variance.png" alt="Explained Variance" loading="lazy" />
+        <div class="chart-label">
+          <strong>Fig 3</strong>
+          <span>Three components reach 89.8% cumulative variance. The fourth adds less than 4%.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 24px;">
+      <p>
+        <strong>Why does PC1 explain "only" 58%?</strong> In textbook examples you often see PC1
+        explaining 80%+ of yield-curve variance. The reason it is lower here is the 2022&ndash;2023
+        hiking cycle, which created unusually large slope movements as the short end rose far faster
+        than the long end. Those big slope swings boosted PC2's share of total variance significantly.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Section 3: Portfolio ── -->
+<div class="section" id="portfolio">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">03 &mdash; The Portfolio</p>
+      <h2 class="section-title">$4 million across four instruments</h2>
+      <p class="section-sub">
+        The portfolio is designed to span the entire yield curve &mdash; from short-dated notes
+        through to the 30-year long bond &mdash; plus an interest-rate swap to represent the
+        derivatives exposure that most real-world fixed income books carry. Each position is
+        $1 million notional, giving a $4 million total portfolio.
+      </p>
+    </div>
+
+    <!-- Instrument cards -->
+    <div class="three-col" style="margin-bottom: 32px; grid-template-columns: repeat(2, 1fr);">
+
+      <div class="factor-block">
+        <div class="factor-num">Short end &mdash; 2Y Treasury Note</div>
+        <div class="factor-name">2-Year Note</div>
+        <div class="factor-desc">YTM 3.48% &middot; $1M notional</div>
+        <div class="factor-plain">
+          The anchor of the short end. Two-year yields move most directly with Fed rate expectations
+          &mdash; when the market prices in rate cuts or hikes, this is the first part of the curve
+          to react. Its low duration (1.92 years) means it is relatively insensitive to rate moves,
+          but it is the clearest signal of where policy is heading.
+        </div>
+      </div>
+
+      <div class="factor-block">
+        <div class="factor-num">Belly &mdash; 10Y Treasury Note</div>
+        <div class="factor-name">10-Year Note</div>
+        <div class="factor-desc">YTM 4.08% &middot; $1M notional</div>
+        <div class="factor-plain">
+          The most-watched bond in the world. The 10-year yield is the global benchmark for
+          borrowing costs &mdash; it drives mortgage rates, corporate credit, and equity valuations.
+          With a duration of 8.14 years it carries four times the rate sensitivity of the 2Y,
+          making it a substantial source of P&amp;L volatility.
+        </div>
+      </div>
+
+      <div class="factor-block">
+        <div class="factor-num">Long end &mdash; 30Y Treasury Bond</div>
+        <div class="factor-name">30-Year Bond</div>
+        <div class="factor-desc">YTM 4.72% &middot; $1M notional</div>
+        <div class="factor-plain">
+          The highest-duration instrument in the portfolio at 15.96 years &mdash; and by far the
+          largest single source of rate risk, contributing $1,594 of the $3,053 total DV01.
+          Its convexity of 370 also means it benefits disproportionately when rates fall sharply,
+          a property known as positive convexity.
+        </div>
+      </div>
+
+      <div class="factor-block">
+        <div class="factor-num">Derivatives &mdash; 5Y Interest Rate Swap</div>
+        <div class="factor-name">5-Year Receive-Fixed Swap</div>
+        <div class="factor-desc">Fixed rate 3.65% &middot; $1M notional</div>
+        <div class="factor-plain">
+          A receive-fixed, pay-floating swap means we collect a fixed 3.65% coupon and pay a
+          floating rate. If rates rise, the fixed leg we receive becomes less valuable relative
+          to the floating leg we pay, so the swap loses money &mdash; just like a bond. At
+          inception it has zero market value, and its P&amp;L is measured against notional.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DV01 bar breakdown -->
+    <div class="card" style="margin-bottom: 24px;">
+      <div class="factor-num" style="margin-bottom: 16px;">DV01 Contribution by Instrument &mdash; Total $3,052.86</div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+
+        <div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span style="font-size: 0.82rem; color: var(--body);">30Y Treasury Bond</span>
+            <span style="font-family: var(--mono); font-size: 0.82rem; color: var(--accent);">$1,594 &mdash; 52.2%</span>
+          </div>
+          <div style="background: var(--rule); border-radius: 3px; height: 8px;">
+            <div style="width: 52.2%; height: 100%; border-radius: 3px; background: #1a3d6b;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span style="font-size: 0.82rem; color: var(--body);">10Y Treasury Note</span>
+            <span style="font-family: var(--mono); font-size: 0.82rem; color: var(--accent);">$814 &mdash; 26.7%</span>
+          </div>
+          <div style="background: var(--rule); border-radius: 3px; height: 8px;">
+            <div style="width: 26.7%; height: 100%; border-radius: 3px; background: #1a3d6b; opacity: 0.7;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span style="font-size: 0.82rem; color: var(--body);">5Y Receive-Fixed Swap</span>
+            <span style="font-family: var(--mono); font-size: 0.82rem; color: var(--accent);">$453 &mdash; 14.8%</span>
+          </div>
+          <div style="background: var(--rule); border-radius: 3px; height: 8px;">
+            <div style="width: 14.8%; height: 100%; border-radius: 3px; background: #1a3d6b; opacity: 0.5;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span style="font-size: 0.82rem; color: var(--body);">2Y Treasury Note</span>
+            <span style="font-family: var(--mono); font-size: 0.82rem; color: var(--accent);">$192 &mdash; 6.3%</span>
+          </div>
+          <div style="background: var(--rule); border-radius: 3px; height: 8px;">
+            <div style="width: 6.3%; height: 100%; border-radius: 3px; background: #1a3d6b; opacity: 0.35;"></div>
+          </div>
+        </div>
+
+      </div>
+      <p style="font-size: 0.78rem; color: var(--muted); margin-top: 14px; line-height: 1.6;">
+        The 30Y bond alone accounts for over half the portfolio's rate sensitivity, even though
+        it is just one of four equal-notional positions. This is the inevitable consequence of
+        duration: longer-maturity bonds are simply far more sensitive to rate moves.
+      </p>
+    </div>
+
+    <!-- Risk metrics table -->
+    <div class="two-col-wide">
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Instrument</th>
+              <th style="text-align:right;">Notional</th>
+              <th style="text-align:right;">YTM</th>
+              <th style="text-align:right;">DV01 ($)</th>
+              <th style="text-align:right;">Duration (yrs)</th>
+              <th style="text-align:right;">Convexity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2Y Treasury Note</td>
+              <td class="num">$1,000,000</td>
+              <td class="num">3.48%</td>
+              <td class="num">191.57</td>
+              <td class="num">1.92</td>
+              <td class="num">4.67</td>
+            </tr>
+            <tr>
+              <td>10Y Treasury Note</td>
+              <td class="num">$1,000,000</td>
+              <td class="num">4.08%</td>
+              <td class="num">814.03</td>
+              <td class="num">8.14</td>
+              <td class="num">78.46</td>
+            </tr>
+            <tr>
+              <td>30Y Treasury Bond</td>
+              <td class="num">$1,000,000</td>
+              <td class="num">4.72%</td>
+              <td class="num">1,594.11</td>
+              <td class="num">15.96</td>
+              <td class="num">369.87</td>
+            </tr>
+            <tr>
+              <td>5Y Receive-Fixed Swap</td>
+              <td class="num">$1,000,000</td>
+              <td class="num">3.65%</td>
+              <td class="num">453.15</td>
+              <td class="num">4.53</td>
+              <td class="num">23.82</td>
+            </tr>
+            <tr>
+              <td>Portfolio Total</td>
+              <td class="num">$4,000,000</td>
+              <td class="num">&mdash;</td>
+              <td class="num">3,052.86</td>
+              <td class="num">&mdash;</td>
+              <td class="num">&mdash;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="card">
+          <div class="factor-num" style="margin-bottom: 6px;">DV01</div>
+          <p style="font-size: 0.85rem; color: var(--body); line-height: 1.65;">
+            Dollar loss for a 1 basis-point (0.01%) rise in yield. The 30Y bond's DV01 of $1,594
+            means it alone loses $1,594 if the 30Y yield ticks up by just one hundredth of a percent.
+            The total DV01 of $3,053 is the first number any risk manager looks at.
+          </p>
+        </div>
+        <div class="card">
+          <div class="factor-num" style="margin-bottom: 6px;">Modified Duration</div>
+          <p style="font-size: 0.85rem; color: var(--body); line-height: 1.65;">
+            Percentage price change per 1% yield move. The 30Y bond's duration of 15.96 years means
+            a 1% rate rise wipes roughly 16% off its value &mdash; $160,000 on $1M notional.
+          </p>
+        </div>
+        <div class="card">
+          <div class="factor-num" style="margin-bottom: 6px;">Convexity</div>
+          <p style="font-size: 0.85rem; color: var(--body); line-height: 1.65;">
+            The second-order rate effect. High convexity (30Y bond: 370) means gains from a rate
+            fall are slightly larger than losses from an equal rate rise. In large shocks this
+            asymmetry becomes real money.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Section 4: Scenarios ── -->
+<div class="section" id="scenarios">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">04 &mdash; Stress Testing</p>
+      <h2 class="section-title">What happens when the curve shifts?</h2>
+      <p class="section-sub">
+        We apply each principal component as a shock to the yield curve &mdash; scaled to
+        historical 1-sigma and 2-sigma magnitudes &mdash; and reprice the entire portfolio.
+        The chart below shows what the curve looks like under each scenario before we even
+        touch the portfolio.
+      </p>
+    </div>
+
+    <div class="chart-embed" style="margin-bottom: 32px;">
+      <img src="outputs/shifted_curves.png" alt="Shifted Yield Curves" loading="lazy" />
+      <div class="chart-label">
+        <strong>Fig 4</strong>
+        <span>Base curve vs &plusmn;1 and &plusmn;2 sigma shocks for each of the three principal components.</span>
+      </div>
+    </div>
+
+    <div class="divider-label"><span>Portfolio P&amp;L by Scenario</span></div>
+
+    <div class="scenario-grid">
+
+      <div class="sc-card">
+        <span class="sc-tag loss">PC1 &mdash; Rates Rise</span>
+        <div class="sc-title">Parallel shift up (+2&sigma;)</div>
+        <div class="sc-pnl neg">&minus;$28,978</div>
+        <div class="sc-desc">
+          All yields jump by roughly 50 basis points together. Every position loses, with the
+          30Y bond and 10Y note hit hardest. This is the portfolio's biggest single risk.
+        </div>
+      </div>
+
+      <div class="sc-card">
+        <span class="sc-tag gain">PC1 &mdash; Rates Fall</span>
+        <div class="sc-title">Parallel shift down (&minus;2&sigma;)</div>
+        <div class="sc-pnl pos">+$29,381</div>
+        <div class="sc-desc">
+          The mirror of rates-rise &mdash; and slightly larger because convexity on the 30Y adds
+          a small cushion on the upside that doesn't exist on the downside.
+        </div>
+      </div>
+
+      <div class="sc-card">
+        <span class="sc-tag loss">PC2 &mdash; Steepening</span>
+        <div class="sc-title">Long rates up, short rates down (+2&sigma;)</div>
+        <div class="sc-pnl neg">&minus;$12,171</div>
+        <div class="sc-desc">
+          The long end rises while the short end falls slightly. The 30Y and 10Y lose more
+          than the 2Y and swap gain, leaving a net loss of $12K.
+        </div>
+      </div>
+
+      <div class="sc-card">
+        <span class="sc-tag gain">PC2 &mdash; Flattening</span>
+        <div class="sc-title">Short rates up, long rates down (&minus;2&sigma;)</div>
+        <div class="sc-pnl pos">+$11,791</div>
+        <div class="sc-desc">
+          Long-end rates fall, boosting the 30Y and 10Y. Short-end losses on the 2Y are
+          much smaller because duration is lower at the short end.
+        </div>
+      </div>
+
+      <div class="sc-card">
+        <span class="sc-tag mixed">PC3 &mdash; Belly Up</span>
+        <div class="sc-title">Middle of curve rises (+2&sigma;)</div>
+        <div class="sc-pnl pos">+$4,396</div>
+        <div class="sc-desc">
+          The 2Y&ndash;5Y belly rises relative to the wings. The 5Y swap loses, but the 2Y
+          note and 30Y bond benefit from their wing positions. Small net gain.
+        </div>
+      </div>
+
+      <div class="sc-card">
+        <span class="sc-tag mixed">PC3 &mdash; Belly Down</span>
+        <div class="sc-title">Middle of curve falls (&minus;2&sigma;)</div>
+        <div class="sc-pnl neg">&minus;$4,498</div>
+        <div class="sc-desc">
+          Inverse butterfly. Belly falls relative to wings. The swap gains but long-end losses
+          dominate marginally. Small net loss.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="two-col">
+      <div class="chart-embed">
+        <img src="outputs/pnl_heatmap.png" alt="P&L Heatmap" loading="lazy" />
+        <div class="chart-label">
+          <strong>Fig 5</strong>
+          <span>Portfolio P&amp;L ($000s) across all PC1 &times; PC2 shock combinations. Green = gain, red = loss.</span>
+        </div>
+      </div>
+      <div class="chart-embed">
+        <img src="outputs/pnl_attribution.png" alt="P&L Attribution" loading="lazy" />
+        <div class="chart-label">
+          <strong>Fig 6</strong>
+          <span>Per-instrument and total P&amp;L for the five key scenarios. The 30Y bond dominates.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 24px;">
+      <p>
+        <strong>The key insight:</strong> the portfolio is net long duration. A parallel rate rise
+        is the dominant risk at ~$29K per 2-sigma event. Slope risk is the second-largest driver
+        at ~$12K. Curvature risk is a distant third at ~$4.5K. This ordering &mdash; level,
+        slope, then curvature &mdash; is exactly how professional fixed income desks think about
+        and hedge their books.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Section 5: Methodology ── -->
+<div class="section" id="methodology">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">05 &mdash; How It Was Built</p>
+      <h2 class="section-title">A six-step pipeline, end to end</h2>
+      <p class="section-sub">
+        The entire analysis runs as a Python pipeline: from raw FRED CSVs through PCA,
+        shock calibration, portfolio pricing, scenario repricing, and finally chart generation.
+        Each step is a self-contained script.
+      </p>
+    </div>
+
+    <div class="two-col-wide">
+      <div class="pipeline">
+
+        <div class="pipe-step">
+          <div class="pipe-num">01</div>
+          <div class="pipe-body">
+            <strong>Load &amp; Clean Data</strong>
+            <p>
+              Read nine FRED CSV files, replace missing-value markers, forward-fill isolated
+              gaps (weekends, holidays), and drop dates where data is too sparse.
+            </p>
+          </div>
+        </div>
+
+        <div class="pipe-step">
+          <div class="pipe-num">02</div>
+          <div class="pipe-body">
+            <strong>PCA Decomposition</strong>
+            <p>
+              Compute daily yield <em>changes</em> (not levels), standardise across tenors,
+              run sklearn's PCA. Flip component signs so each PC is economically interpretable.
+            </p>
+          </div>
+        </div>
+
+        <div class="pipe-step">
+          <div class="pipe-num">03</div>
+          <div class="pipe-body">
+            <strong>Shock Calibration</strong>
+            <p>
+              Measure the historical distribution of daily PC scores. Define &plusmn;1 and
+              &plusmn;2 standard deviation shocks per component and convert back into
+              basis-point moves at every tenor.
+            </p>
+          </div>
+        </div>
+
+        <div class="pipe-step">
+          <div class="pipe-num">04</div>
+          <div class="pipe-body">
+            <strong>Portfolio Pricing</strong>
+            <p>
+              Price each instrument using discounted cash-flow maths against the current
+              interpolated yield curve. Compute DV01, Modified Duration, and Convexity via
+              central-difference bumping.
+            </p>
+          </div>
+        </div>
+
+        <div class="pipe-step">
+          <div class="pipe-num">05</div>
+          <div class="pipe-body">
+            <strong>Scenario Repricing</strong>
+            <p>
+              Apply each shock, reprice every instrument, and record the P&amp;L.
+              Decompose P&amp;L into a first-order duration effect and a second-order
+              convexity contribution.
+            </p>
+          </div>
+        </div>
+
+        <div class="pipe-step">
+          <div class="pipe-num">06</div>
+          <div class="pipe-body">
+            <strong>Visualisation</strong>
+            <p>
+              Generate six publication-quality charts covering yield history, PCA factor
+              shapes, explained variance, shocked curves, a P&amp;L heatmap, and
+              per-instrument attribution.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="card">
+          <div class="factor-num" style="margin-bottom: 8px;">Tech Stack</div>
+          <p style="font-size: 0.85rem; color: var(--body); line-height: 1.8;">
+            Python &middot; pandas &middot; NumPy &middot; scikit-learn (PCA) &middot;
+            matplotlib &middot; seaborn &middot; SciPy (interpolation)
+          </p>
+        </div>
+        <div class="card">
+          <div class="factor-num" style="margin-bottom: 8px;">Data Source</div>
+          <p style="font-size: 0.85rem; color: var(--body); line-height: 1.65;">
+            Federal Reserve Economic Data (FRED) &mdash; series DGS1MO through DGS30.
+            Daily observations, approximately 5,000+ trading days.
+          </p>
+        </div>
+        <div class="card">
+          <div class="factor-num" style="margin-bottom: 8px;">Bond Pricing</div>
+          <p style="font-size: 0.85rem; color: var(--body); line-height: 1.65;">
+            Standard semi-annual coupon DCF. Par bonds (coupon = YTM at base curve).
+            Yield interpolated at each maturity using scipy's cubic spline.
+          </p>
+        </div>
+        <div class="card">
+          <div class="factor-num" style="margin-bottom: 8px;">Swap Pricing</div>
+          <p style="font-size: 0.85rem; color: var(--body); line-height: 1.65;">
+            Receive-fixed, pay-floating. NPV = PV of fixed leg &minus; notional.
+            At inception the fixed rate equals the 5Y par swap rate so NPV starts at zero;
+            P&amp;L is measured relative to notional for risk scaling.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer>
+  <p>Data: <a href="https://fred.stlouisfed.org" target="_blank">FRED &mdash; Federal Reserve Bank of St. Louis</a></p>
+  <p><a href="https://github.com/leo-lightfoot/Yield_Curve_PCA" target="_blank">View source on GitHub &uarr;</a></p>
+</footer>
+
+</body>
+</html>
