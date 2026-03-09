@@ -91,25 +91,34 @@ def sign_correct_loadings(loadings_df, pca):
     PCA components can have arbitrary sign. We apply a convention so that:
     - PC1 loadings are mostly positive (a positive PC1 score = rates rising)
     - PC2 loading is positive at the long end (positive PC2 = curve steepening)
-    - PC3 loadings at the belly (5Y, 10Y) are negative relative to wings
-    
+    - PC3 loadings at the belly (1Y–5Y) are positive relative to wings
+      (positive PC3 = belly rises = curvature increases)
+
     This makes the components more intuitively interpretable.
+
+    Note: We only modify pca.components_ (a numpy array, safe for in-place ops),
+    then rebuild loadings_df from it. Directly assigning to loadings_df.iloc[i]
+    can silently fail in pandas due to copy/view semantics.
     """
     # PC1: flip if the majority of loadings are negative
     if loadings_df.iloc[0].mean() < 0:
-        loadings_df.iloc[0] = loadings_df.iloc[0] * -1
         pca.components_[0] *= -1
 
     # PC2: flip if the long end (30Y) has a negative loading
     if loadings_df.iloc[1]["30Y"] < 0:
-        loadings_df.iloc[1] = loadings_df.iloc[1] * -1
         pca.components_[1] *= -1
 
-    # PC3: flip if the belly (10Y) loading is positive (we want belly dip = positive PC3)
+    # PC3: flip if the belly (10Y) loading is positive (we want belly up = positive PC3)
     if "10Y" in loadings_df.columns and loadings_df.iloc[2]["10Y"] > 0:
-        loadings_df.iloc[2] = loadings_df.iloc[2] * -1
         pca.components_[2] *= -1
-    
+
+    # Rebuild loadings_df from updated pca.components_ to guarantee consistency
+    loadings_df = pd.DataFrame(
+        pca.components_,
+        index=loadings_df.index,
+        columns=loadings_df.columns,
+    )
+
     return loadings_df, pca
 
 
@@ -128,9 +137,9 @@ def print_pca_summary(pca, loadings_df):
     print(loadings_df.round(3).to_string())
     
     print("\nInterpretation:")
-    print("  PC1 (Level):     All tenors have similar loadings → parallel shift")
+    print("  PC1 (Level):     All tenors have similar positive loadings → parallel shift")
     print("  PC2 (Slope):     Short tenors load negative, long tenors positive → steepening")
-    print("  PC3 (Curvature): Short and long end positive, belly negative → butterfly")
+    print("  PC3 (Curvature): Belly (1Y–5Y) positive, wings (1M–3M and 10Y+) negative → curvature")
 
 
 # ── Main Execution ─────────────────────────────────────────────────────────────

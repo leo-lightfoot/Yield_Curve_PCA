@@ -20,6 +20,8 @@ import matplotlib.ticker as mticker
 import seaborn as sns
 import pickle
 
+from utils import TENOR_YEARS
+
 # ── Configuration ──────────────────────────────────────────────────────────────
 
 OUTPUT_DIR = "outputs"
@@ -30,12 +32,6 @@ INSTRUMENT_COLORS = {
     "10Y Treasury Note":      "#4CAF50",  # Green
     "30Y Treasury Bond":      "#FF5722",  # Deep Orange
     "5Y Receive-Fixed Swap":  "#9C27B0",  # Purple
-}
-
-TENOR_YEARS = {
-    "1M": 1/12, "3M": 3/12, "6M": 6/12,
-    "1Y": 1.0,  "2Y": 2.0,  "5Y": 5.0,
-    "10Y": 10.0, "20Y": 20.0, "30Y": 30.0
 }
 
 # Matplotlib style

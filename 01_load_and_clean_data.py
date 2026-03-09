@@ -13,6 +13,8 @@ import os
 import pandas as pd
 import numpy as np
 
+from utils import TENOR_YEARS, TENORS_ORDERED
+
 # ── Configuration ──────────────────────────────────────────────────────────────
 
 DATA_DIR = "data"
@@ -30,22 +32,6 @@ TENOR_FILE_MAP = {
     "10Y": "DGS10.csv",
     "20Y": "DGS20.csv",
     "30Y": "DGS30.csv",
-}
-
-# Tenor labels in order from short to long end (used for plotting and ordering)
-TENORS_ORDERED = ["1M", "3M", "6M", "1Y", "2Y", "5Y", "10Y", "20Y", "30Y"]
-
-# Numeric tenor values in years (used for interpolation and pricing math)
-TENOR_YEARS = {
-    "1M":  1/12,
-    "3M":  3/12,
-    "6M":  6/12,
-    "1Y":  1.0,
-    "2Y":  2.0,
-    "5Y":  5.0,
-    "10Y": 10.0,
-    "20Y": 20.0,
-    "30Y": 30.0,
 }
 
 # ── Helper Functions ───────────────────────────────────────────────────────────
